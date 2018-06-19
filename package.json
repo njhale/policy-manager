@@ -1,0 +1,26 @@
+{
+  "name": "policy-manager",
+  "version": "1.0.0",
+  "description": "Insurance policy manager for agent hierarchies",
+  "main": "server.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/njhale/policy-manager.git"
+  },
+  "author": "njohnhale@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/njhale/policy-manager/issues"
+  },
+  "homepage": "https://github.com/njhale/policy-manager#readme",
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "debug": "^3.1.0",
+    "grpc": "^1.13.0-pre1",
+    "mockgoose": "^7.3.5",
+    "mongoose": "^5.1.5"
+  }
+}
