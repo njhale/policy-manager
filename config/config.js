@@ -1,6 +1,8 @@
 // config.js
+'use strict';
 
 let mongoose = require('mongoose');
+let Mockgoose = require('mockgoose').Mockgoose;
 let bluebird = require('bluebird');
 let events = require('events');
 
@@ -26,13 +28,16 @@ let logger = {
 // Collect related service environment variables
 let mongoHost = process.env.NODE_ENV === 'test' ?
   'localhost' : 'policy-manager-db';
+// let mongoHost = '172.18.0.2';
 let mongoPort = process.env.MONGO_PORT || 27017;
 let mongoDatabase = process.env.MONGODB_DATABASE || 'policymanagerdb';
 let mongoUser = process.env.MONGODB_USER || 'nodejs';
 let mongoPassword = process.env.MONGODB_PASSWORD || 'nodejs';
 
+// let mongoUri = 
+//   `mongodb://${mongoUser}:${mongoPassword}@${mongoHost}:${mongoPort}/${mongoDatabase}`;
 let mongoUri = 
-  `mongodb://${mongoUser}:${mongoPassword}@${mongoHost}:${mongoPort}/${mongoDatabase}`;
+  `mongodb://${mongoHost}:${mongoPort}/${mongoDatabase}`;
 
 let mongoOptions = {
   autoIndex: true, // build indexes
@@ -41,31 +46,37 @@ let mongoOptions = {
   reconnectInterval: 500, // Reconnect every 500ms
   poolSize: 10, // Maintain up to 10 socket connections
   // If not connected, return errors immediately rather than waiting for reconnect
-  bufferMaxEntries: 0
+  // bufferMaxEntries: 0
   
 };
 
 // Setup mongoose
 mongoose.Promise = bluebird; // Change promise library to bluebird
 
+let mockgoose;
+
 // check for testing flag
 if (process.env.NODE_ENV === 'test') {
-  // use mock database for testing
-  const Mockgoose = require('mockgoose').Mockgoose;
-  const mockgoose = new Mockgoose(mongoose);
+
+  mongoUri = `mongodb://${mongoHost}:${mongoPort}/${mongoDatabase}`;
+
+  mockgoose = new Mockgoose(mongoose);
+  mockgoose.helper.setDbVersion("3.2.1");
 
   // wrap mongoose connection with mockgoose
   mockgoose.prepareStorage().then(() => {
+    // connect
     mongoose.connect(mongoUri, mongoOptions).then(
-      () => { logger.info('Mongoose connection ready'); },
+      () => { logger.info('Mongoose connection ready'); status.emit('ready'); },
       (err) => { logger.error(`An error occured while connecting to mongodb: ${err}`); }
     );
+
   });
 
 } else {
   // use real database
   mongoose.connect(mongoUri, mongoOptions).then(
-    () => { logger.info('Mongoose connection ready'); },
+    () => { logger.info('Mongoose connection ready'); status.emit('ready'); },
     (err) => { logger.error(`An error occured while connecting to mongodb: ${err}`); }
   );
 
@@ -76,16 +87,13 @@ mongoose.connection.on('error', (err) => {
   logger.error(`An error occured while interfacing with mongodb: ${err}`);
 });
 
-// wait until the connection is ready
-mongoose.connection.once('open', () => { 
-  // fire a ready event 
-  status.emit('ready'); 
-});
+
 
 // export configurations
 module.exports = {
   logger: logger,
   app: app,
   port: port,
-  status: status
+  status: status,
+  mockgoose: mockgoose
 }
