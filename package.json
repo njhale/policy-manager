@@ -4,7 +4,8 @@
   "description": "Insurance policy manager for agent hierarchies",
   "main": "server.js",
   "scripts": {
-    "test": "npm test"
+    "start": "node server",
+    "test": "DEBUG=policy-manager* NODE_ENV=test mocha \"**/*.spec.js\" --timeout 10000"
   },
   "repository": {
     "type": "git",
@@ -19,8 +20,14 @@
   "dependencies": {
     "bluebird": "^3.5.1",
     "debug": "^3.1.0",
+    "events": "^3.0.0",
     "grpc": "^1.13.0-pre1",
-    "mockgoose": "^7.3.5",
     "mongoose": "^5.1.5"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "mockgoose": "^7.3.5",
+    "sinon": "^6.0.0"
   }
 }

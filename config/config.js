@@ -2,6 +2,10 @@
 
 let mongoose = require('mongoose');
 let bluebird = require('bluebird');
+let events = require('events');
+
+// create the status event emitter
+let status = new events.EventEmitter();
 
 // gather configurations
 let app = process.env.APP || 'policy-manager'; // get the app name
@@ -20,7 +24,7 @@ let logger = {
 }
 
 // Collect related service environment variables
-let mongoHost = process.env.NODE_ENV === 'testing' ?
+let mongoHost = process.env.NODE_ENV === 'test' ?
   'localhost' : 'policy-manager-db';
 let mongoPort = process.env.MONGO_PORT || 27017;
 let mongoDatabase = process.env.MONGODB_DATABASE || 'policymanagerdb';
@@ -45,7 +49,7 @@ let mongoOptions = {
 mongoose.Promise = bluebird; // Change promise library to bluebird
 
 // check for testing flag
-if (process.env.NODE_ENV === 'testing') {
+if (process.env.NODE_ENV === 'test') {
   // use mock database for testing
   const Mockgoose = require('mockgoose').Mockgoose;
   const mockgoose = new Mockgoose(mongoose);
@@ -67,14 +71,21 @@ if (process.env.NODE_ENV === 'testing') {
 
 }
 
-// Define a connection error event listener
+// define a connection error event listener
 mongoose.connection.on('error', (err) => {
   logger.error(`An error occured while interfacing with mongodb: ${err}`);
+});
+
+// wait until the connection is ready
+mongoose.connection.once('open', () => { 
+  // fire a ready event 
+  status.emit('ready'); 
 });
 
 // export configurations
 module.exports = {
   logger: logger,
   app: app,
-  port: port
+  port: port,
+  status: status
 }
